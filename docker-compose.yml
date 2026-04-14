@@ -2,7 +2,7 @@ services:
   # Evolution API - WhatsApp Baileys implementation
   # Connects your personal WhatsApp number to webhooks
   evolution_api:
-    image: evoapibrasil/evolution-api:latest
+    image: evoapicloud/evolution-api:latest
     container_name: evolution_api
     restart: always
     ports:
