@@ -85,9 +85,15 @@ check_docker
 check_docker_compose
 
 # --- Step 1: Build / Pull Images ---
-log "Building Docker images..."
 cd "$PROJECT_DIR"
-$DOCKER_COMPOSE build api
+if grep -q "^    build:" docker-compose.yml 2>/dev/null; then
+    log "Building API image (this may take a few minutes on first run)..."
+    $DOCKER_COMPOSE build api
+else
+    log "Using pre-built image from Docker Hub..."
+    log "To rebuild locally, run: docker build -t YOURHUB/sabeel-homeo:latest . && docker push YOURHUB/sabeel-homeo:latest"
+    $DOCKER_COMPOSE pull api
+fi
 
 # --- Step 2: Start API ---
 log "Starting FastAPI backend..."

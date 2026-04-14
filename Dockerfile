@@ -2,25 +2,24 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libffi-dev \
-    libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends --no-install-recommends \
+        gcc \
+        libffi-dev \
+        libssl-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get autoremove -y \
+    && useradd --create-home --shell /bin/bash appuser
 
-# Copy requirements first for caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY --chown=appuser:appuser requirements.txt .
+USER appuser
 
-# Copy application code
-COPY . .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Create static directory for audio files
-RUN mkdir -p /app/static
+COPY --chown=appuser:appuser . .
 
-# Expose port
+RUN mkdir -p /app/static && chmod 755 /app/static
+
 EXPOSE 8000
 
-# Run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
