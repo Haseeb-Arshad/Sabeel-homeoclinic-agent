@@ -3,13 +3,15 @@ FROM python:3.11-slim
 WORKDIR /app
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends --no-install-recommends \
+    apt-get install -y --no-install-recommends \
         gcc \
         libffi-dev \
         libssl-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y \
-    && useradd --create-home --shell /bin/bash appuser
+    && useradd --create-home --shell /bin/bash appuser \
+    && mkdir -p /app/static \
+    && chown -R appuser:appuser /app
 
 COPY --chown=appuser:appuser requirements.txt .
 USER appuser
@@ -17,8 +19,6 @@ USER appuser
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 COPY --chown=appuser:appuser . .
-
-RUN mkdir -p /app/static && chmod 755 /app/static
 
 EXPOSE 8000
 
