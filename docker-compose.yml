@@ -1,6 +1,19 @@
 services:
+  # PostgreSQL for Evolution API
+  postgres:
+    image: postgres:16-alpine
+    container_name: evolution_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: evolution_pass
+      POSTGRES_DB: evolution
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
   # Evolution API - WhatsApp Baileys implementation
-  # Connects your personal WhatsApp number to webhooks
   evolution_api:
     image: evoapicloud/evolution-api:latest
     container_name: evolution_api
@@ -13,18 +26,19 @@ services:
       - DOCKER_ENV=true
       - AUTHENTICATION_API_KEY=${WHATSAPP_API_KEY:-sabeel_clinic_key_2024}
       - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
-      # Webhook for incoming messages
-      # For LOCAL dev: http://host.docker.internal:8000/webhook/evolution
-      # For PRODUCTION: set WHATSAPP_WEBHOOK_URL env var to your public URL
+      # Database
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://evolution:evolution_pass@postgres:5432/evolution?sslmode=disable
+      - DATABASE_CONNECTION_CLIENT_NAME=evolution
+      # Webhook
       - WEBHOOK_GLOBAL_ENABLED=true
       - WEBHOOK_GLOBAL_URL=${WHATSAPP_WEBHOOK_URL:-http://host.docker.internal:8000/webhook/evolution}
       - EVENTS_ENABLED=messages.upsert,connection.update
-      # Database (optional - uses file storage if disabled)
-      - DATABASE_ENABLED=false
-      # QR Code output
+      # QR Code
       - QRCODE_storeage=true
-    volumes:
-      - evolution_instances:/evolution/instances
+    depends_on:
+      - postgres
 
   # Backend API - builds locally (needs ~2GB RAM with swap)
   api:
@@ -58,4 +72,4 @@ services:
       - evolution_api
 
 volumes:
-  evolution_instances:
+  postgres_data:
