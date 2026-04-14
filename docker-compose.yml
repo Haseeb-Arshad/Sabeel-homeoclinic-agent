@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   # Evolution API - WhatsApp Baileys implementation
   # Connects your personal WhatsApp number to webhooks
   evolution_api:
-    image: atendare/evolution-api:latest
+    image: evoapibrasil/evolution-api:latest
     container_name: evolution_api
     restart: always
     ports:
