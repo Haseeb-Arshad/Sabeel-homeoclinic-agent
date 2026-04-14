@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Evolution API - WhatsApp Baileys implementation
+  # Connects your personal WhatsApp number to webhooks
+  evolution_api:
+    image: atendare/evolution-api:latest
+    container_name: evolution_api
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_TYPE=http
+      - SERVER_PORT=8080
+      - DOCKER_ENV=true
+      - AUTHENTICATION_API_KEY=${WHATSAPP_API_KEY:-sabeel_clinic_key_2024}
+      - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
+      # Webhook for incoming messages
+      # For LOCAL dev: http://host.docker.internal:8000/webhook/evolution
+      # For PRODUCTION: set WHATSAPP_WEBHOOK_URL env var to your public URL
+      - WEBHOOK_GLOBAL_ENABLED=true
+      - WEBHOOK_GLOBAL_URL=${WHATSAPP_WEBHOOK_URL:-http://host.docker.internal:8000/webhook/evolution}
+      - EVENTS_ENABLED=messages.upsert,connection.update
+      # Database (optional - uses file storage if disabled)
+      - DATABASE_ENABLED=false
+      # QR Code output
+      - QRCODE_storeage=true
+    volumes:
+      - evolution_instances:/evolution/instances
+
+  # Backend API
+  api:
+    build: .
+    container_name: sabeel_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - TWILIO_WHATSAPP_NUMBER=${TWILIO_WHATSAPP_NUMBER}
+      - TWILIO_VERIFY_SIGNATURE=true
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - ELEVENLABS_VOICE_ID=${ELEVENLABS_VOICE_ID}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - META_PAGE_ACCESS_TOKEN=${META_PAGE_ACCESS_TOKEN}
+      - META_VERIFY_TOKEN=${META_VERIFY_TOKEN}
+      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-http://localhost:8000}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - WHATSAPP_API_URL=http://evolution_api:8080
+      - WHATSAPP_API_KEY=${WHATSAPP_API_KEY:-sabeel_clinic_key_2024}
+      - WHATSAPP_INSTANCE_NAME=sabeel_homeo
+    depends_on:
+      - evolution_api
+
+volumes:
+  evolution_instances:
