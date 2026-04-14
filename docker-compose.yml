@@ -28,13 +28,9 @@ services:
     volumes:
       - evolution_instances:/evolution/instances
 
-  # Backend API
-  # On a machine with >1GB RAM, build and push:
-  #   docker build -t YOURDOCKERHUB/sabeel-homeo:latest .
-  #   docker push YOURDOCKERHUB/sabeel-homeo:latest
-  # Then replace "image:" below with your Docker Hub username.
+  # Backend API - builds locally (needs ~2GB RAM with swap)
   api:
-    image: YOURDOCKERHUB/sabeel-homeo:latest
+    build: .
     container_name: sabeel_api
     restart: always
     ports:
